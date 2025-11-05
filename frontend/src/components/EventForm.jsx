@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import LoadingSpinner from './LoadingSpinner.jsx'
 
 export default function EventForm({ onSubmit, initial, loading = false }) {
@@ -6,6 +6,22 @@ export default function EventForm({ onSubmit, initial, loading = false }) {
   const [startTime, setStartTime] = useState(initial ? toLocalInput(initial.startTime) : '')
   const [endTime, setEndTime] = useState(initial ? toLocalInput(initial.endTime) : '')
   const [status, setStatus] = useState(initial?.status || 'BUSY')
+
+  // Update form fields when initial prop changes (for editing)
+  useEffect(() => {
+    if (initial) {
+      setTitle(initial.title || '')
+      setStartTime(initial.startTime ? toLocalInput(initial.startTime) : '')
+      setEndTime(initial.endTime ? toLocalInput(initial.endTime) : '')
+      setStatus(initial.status || 'BUSY')
+    } else {
+      // Reset form when initial is null (creating new event)
+      setTitle('')
+      setStartTime('')
+      setEndTime('')
+      setStatus('BUSY')
+    }
+  }, [initial])
 
   const submit = (e) => {
     e.preventDefault()

@@ -39,11 +39,30 @@ export default function Marketplace(){
       setToast({ message: 'Marketplace updated!', type: 'info' })
       load()
     }
+    const refreshOnDelete = ()=> {
+      load()
+    }
+    const refreshOnUpdate = ()=> {
+      load()
+    }
+    const refreshOnCreate = ()=> {
+      load()
+    }
+    // Listen for swap events
     socket.on('swap:accepted', refresh)
     socket.on('swap:rejected', refresh)
+    socket.on('swap:requested', refresh) // When swap is requested, slots become SWAP_PENDING and should disappear
+    // Listen for event changes
+    socket.on('event:deleted', refreshOnDelete)
+    socket.on('event:updated', refreshOnUpdate) // When event status changes (affects marketplace visibility)
+    socket.on('event:created', refreshOnCreate) // When new SWAPPABLE event is created
     return ()=>{
       socket.off('swap:accepted', refresh)
       socket.off('swap:rejected', refresh)
+      socket.off('swap:requested', refresh)
+      socket.off('event:deleted', refreshOnDelete)
+      socket.off('event:updated', refreshOnUpdate)
+      socket.off('event:created', refreshOnCreate)
     }
   },[socket])
 

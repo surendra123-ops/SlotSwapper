@@ -33,13 +33,18 @@ export default function Requests(){
       setToast({ message: 'Requests updated!', type: 'info' })
       load()
     }
+    const refreshOnDelete = ()=> {
+      load()
+    }
     socket.on('swap:requested', refresh)
     socket.on('swap:accepted', refresh)
     socket.on('swap:rejected', refresh)
+    socket.on('event:deleted', refreshOnDelete)
     return ()=>{
       socket.off('swap:requested', refresh)
       socket.off('swap:accepted', refresh)
       socket.off('swap:rejected', refresh)
+      socket.off('event:deleted', refreshOnDelete)
     }
   },[socket])
 

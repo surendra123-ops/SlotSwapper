@@ -26,7 +26,17 @@ export const createSwapRequest = async (req, res) => {
   await myEvent.save();
   await theirEvent.save();
 
+  // Notify the receiver about the swap request
   emitToUser(io, theirEvent.userId, 'swap:requested', { swapId: swap._id });
+  
+  // Broadcast to all users that events have been updated (status changed to SWAP_PENDING)
+  // This ensures marketplace updates in real-time when slots become pending
+  if (io) {
+    io.emit('event:updated', { 
+      eventIds: [myEvent._id.toString(), theirEvent._id.toString()],
+      status: 'SWAP_PENDING'
+    });
+  }
 
   return res.status(201).json({ swap });
 };
@@ -53,6 +63,15 @@ export const respondToSwap = async (req, res) => {
     await myEvent.save();
     await theirEvent.save();
     emitToUser(io, swap.requesterId, 'swap:rejected', { swapId: swap._id });
+    
+    // Broadcast that events are back to SWAPPABLE (should reappear in marketplace)
+    if (io) {
+      io.emit('event:updated', { 
+        eventIds: [myEvent._id.toString(), theirEvent._id.toString()],
+        status: 'SWAPPABLE'
+      });
+    }
+    
     return res.json({ swap });
   }
 
@@ -73,6 +92,14 @@ export const respondToSwap = async (req, res) => {
 
   emitToUser(io, requesterId, 'swap:accepted', { swapId: swap._id });
   emitToUser(io, receiverId, 'swap:accepted', { swapId: swap._id });
+  
+  // Broadcast that events have changed owners and status (should update all dashboards)
+  if (io) {
+    io.emit('event:updated', { 
+      eventIds: [myEvent._id.toString(), theirEvent._id.toString()],
+      status: 'BUSY'
+    });
+  }
 
   return res.json({ swap });
 };

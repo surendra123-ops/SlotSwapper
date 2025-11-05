@@ -34,13 +34,30 @@ export default function Dashboard(){
       setToast({ message: 'Calendar updated!', type: 'info' })
       load()
     }
+    const refreshOnDelete = ()=> {
+      load()
+    }
+    const refreshOnUpdate = ()=> {
+      load()
+    }
+    const refreshOnCreate = ()=> {
+      load()
+    }
+    // Listen for swap events
     socket.on('swap:requested', refresh)
     socket.on('swap:accepted', refresh)
     socket.on('swap:rejected', refresh)
+    // Listen for event changes
+    socket.on('event:deleted', refreshOnDelete)
+    socket.on('event:updated', refreshOnUpdate) // When event status changes
+    socket.on('event:created', refreshOnCreate) // When new events are created
     return ()=>{
       socket.off('swap:requested', refresh)
       socket.off('swap:accepted', refresh)
       socket.off('swap:rejected', refresh)
+      socket.off('event:deleted', refreshOnDelete)
+      socket.off('event:updated', refreshOnUpdate)
+      socket.off('event:created', refreshOnCreate)
     }
   },[socket])
 

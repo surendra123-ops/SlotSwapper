@@ -78,8 +78,16 @@ export const respondToSwap = async (req, res) => {
 };
 
 export const listRequests = async (req, res) => {
-  const incoming = await SwapRequest.find({ receiverId: req.user.id }).sort({ createdAt: -1 });
-  const outgoing = await SwapRequest.find({ requesterId: req.user.id }).sort({ createdAt: -1 });
+  const incoming = await SwapRequest.find({ receiverId: req.user.id })
+    .populate('requesterId', 'name email')
+    .populate('mySlotId', 'title startTime endTime')
+    .populate('theirSlotId', 'title startTime endTime')
+    .sort({ createdAt: -1 });
+  const outgoing = await SwapRequest.find({ requesterId: req.user.id })
+    .populate('receiverId', 'name email')
+    .populate('mySlotId', 'title startTime endTime')
+    .populate('theirSlotId', 'title startTime endTime')
+    .sort({ createdAt: -1 });
   return res.json({ incoming, outgoing });
 };
 

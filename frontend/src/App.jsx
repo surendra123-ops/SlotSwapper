@@ -20,7 +20,7 @@ export default function App() {
       <SocketProvider>
         <div className="min-h-screen">
           <Navbar />
-          <div className="max-w-4xl mx-auto p-4">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -29,7 +29,7 @@ export default function App() {
               <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </div>
+          </main>
         </div>
       </SocketProvider>
     </AuthProvider>

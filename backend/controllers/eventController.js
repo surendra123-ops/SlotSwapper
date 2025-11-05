@@ -30,7 +30,13 @@ export const deleteEvent = async (req, res) => {
 };
 
 export const listSwappableFromOthers = async (req, res) => {
-  const events = await Event.find({ userId: { $ne: req.user.id }, status: 'SWAPPABLE' }).sort({ startTime: 1 });
+  // Only show swappable slots from others that are not pending
+  const events = await Event.find({ 
+    userId: { $ne: req.user.id }, 
+    status: 'SWAPPABLE' // Exclude SWAP_PENDING - those are already in a swap
+  })
+    .populate('userId', 'name email')
+    .sort({ startTime: 1 });
   return res.json({ events });
 };
 

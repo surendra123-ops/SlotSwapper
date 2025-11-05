@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import LoadingSpinner from '../components/LoadingSpinner.jsx'
 
 export default function Login(){
   const { login } = useAuth()
@@ -8,24 +9,100 @@ export default function Login(){
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(false)
+  
   const submit = async (e)=>{
     e.preventDefault()
     setErr('')
+    if (!email.trim()) {
+      setErr('Please enter your email address')
+      return
+    }
+    if (!password.trim()) {
+      setErr('Please enter your password')
+      return
+    }
     try{
+      setLoading(true)
       await login(email, password)
       nav('/')
-    }catch(e){ setErr('Invalid credentials') }
+    }catch(e){ 
+      setErr('Invalid email or password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
+  
   return (
-    <div className="max-w-sm mx-auto mt-10 bg-white p-6 rounded border">
-      <h1 className="text-xl font-semibold mb-4">Login</h1>
-      {err && <div className="text-red-600 text-sm mb-2">{err}</div>}
-      <form onSubmit={submit} className="space-y-3">
-        <input className="w-full border rounded px-3 py-2" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input type="password" className="w-full border rounded px-3 py-2" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} />
-        <button className="w-full bg-blue-600 text-white rounded py-2">Login</button>
+    <div className="max-w-md mx-auto mt-4 sm:mt-10 bg-white border border-gray-200 rounded-lg shadow-sm p-6 sm:p-8">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">🔐 Login</h1>
+        <p className="text-gray-600">Sign in to access your calendar</p>
+      </div>
+      
+      {err && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+          <span className="font-medium">⚠️ Error:</span> {err}
+        </div>
+      )}
+      
+      <form onSubmit={submit} className="space-y-5">
+        <div>
+          <label htmlFor="login-email" className="block text-sm font-semibold text-gray-700 mb-2">
+            📧 Email Address <span className="text-red-500">*</span>
+          </label>
+          <input 
+            id="login-email"
+            type="email"
+            className="w-full border border-gray-300 px-4 py-3 sm:py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm" 
+            placeholder="Enter your email address"
+            value={email} 
+            onChange={e=>setEmail(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <p className="text-xs text-gray-500 mt-1.5">Enter the email address you used to sign up</p>
+        </div>
+        
+        <div>
+          <label htmlFor="login-password" className="block text-sm font-semibold text-gray-700 mb-2">
+            🔑 Password <span className="text-red-500">*</span>
+          </label>
+          <input 
+            id="login-password"
+            type="password" 
+            className="w-full border border-gray-300 px-4 py-3 sm:py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm" 
+            placeholder="Enter your password"
+            value={password} 
+            onChange={e=>setPassword(e.target.value)}
+            required
+            disabled={loading}
+          />
+          <p className="text-xs text-gray-500 mt-1.5">Enter your account password</p>
+        </div>
+        
+        <button 
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white rounded-lg py-3 sm:py-2.5 font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px] sm:min-h-0 text-base sm:text-sm"
+        >
+          {loading ? (
+            <>
+              <LoadingSpinner size="sm" />
+              <span>Signing in...</span>
+            </>
+          ) : (
+            <span>🚀 Sign In</span>
+          )}
+        </button>
       </form>
-      <div className="text-sm mt-3">No account? <Link className="text-blue-600" to="/signup">Signup</Link></div>
+      
+      <div className="text-center text-sm mt-6 pt-6 border-t border-gray-200">
+        <span className="text-gray-600">Don't have an account? </span>
+        <Link className="text-blue-600 font-medium hover:text-blue-700 hover:underline" to="/signup">
+          Create Account →
+        </Link>
+      </div>
     </div>
   )
 }

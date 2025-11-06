@@ -10,12 +10,20 @@ export const createEvent = async (req, res) => {
   const { title, startTime, endTime, status } = req.body;
   if (!title || !startTime || !endTime) return res.status(400).json({ message: 'Missing fields' });
   const event = await Event.create({ title, startTime, endTime, status: status || 'BUSY', userId: req.user.id });
-  
+
+  // Auto-delete if event already ended
+  const now = new Date();
+  if (new Date(event.endTime) <= now) {
+    await Event.deleteOne({ _id: event._id });
+    if (io) io.emit('event:deleted', { eventId: event._id.toString(), userId: req.user.id });
+    return res.status(200).json({ ok: true, autoDeleted: true, reason: 'Event end time is in the past' });
+  }
+
   // Broadcast new event creation (only if SWAPPABLE, so marketplace can update)
   if (io && event.status === 'SWAPPABLE') {
     io.emit('event:created', { eventId: event._id.toString() });
   }
-  
+
   return res.status(201).json({ event });
 };
 
@@ -29,6 +37,14 @@ export const updateEvent = async (req, res) => {
   const updatable = ['title', 'startTime', 'endTime', 'status'];
   for (const key of updatable) if (req.body[key] !== undefined) event[key] = req.body[key];
   await event.save();
+
+  // Auto-delete if event already ended after update
+  const now = new Date();
+  if (new Date(event.endTime) <= now) {
+    await Event.deleteOne({ _id: event._id });
+    if (io) io.emit('event:deleted', { eventId: event._id.toString(), userId: req.user.id });
+    return res.json({ ok: true, autoDeleted: true, reason: 'Event end time is in the past' });
+  }
   
   // Broadcast if status changed (affects marketplace visibility)
   if (io && (oldStatus !== event.status || req.body.status !== undefined)) {

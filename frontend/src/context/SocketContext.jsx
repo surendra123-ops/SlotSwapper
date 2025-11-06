@@ -15,7 +15,14 @@ export function SocketProvider({ children }) {
       setSocket(null)
       return
     }
-    const s = io(origin, { auth: { userId: user.id } })
+    const userId = user.id || user._id
+    const s = io(origin, {
+      auth: { userId },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500
+    })
     setSocket(s)
     return () => { s.disconnect() }
   }, [user])

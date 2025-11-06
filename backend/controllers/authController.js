@@ -6,7 +6,13 @@ export const signup = async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) return res.status(400).json({ message: 'Missing fields' });
     const exists = await User.findOne({ email });
-    if (exists) return res.status(409).json({ message: 'Email already in use' });
+    // Idempotent signup: if user exists and password matches, return token (treat as login)
+    if (exists) {
+      const ok = await exists.comparePassword(password);
+      if (!ok) return res.status(409).json({ message: 'Email already in use' });
+      const token = signToken(exists);
+      return res.status(200).json({ token, user: { id: exists._id, name: exists.name, email: exists.email } });
+    }
     const passwordHash = await User.hashPassword(password);
     const user = await User.create({ name, email, passwordHash });
     const token = signToken(user);
